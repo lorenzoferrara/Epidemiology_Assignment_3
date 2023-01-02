@@ -1,0 +1,136 @@
+---
+title: "Assignment 3 Spatial Epidemiology"
+author: "Ferrara Lorenzo, Lucchini Marco"
+# date: "25-10-2022"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set( echo=F )
+knitr::opts_chunk$set(out.width = '70%')
+knitr::opts_chunk$set(fig.align = "center")
+knitr::opts_chunk$set(tidy =TRUE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+```{r}
+setwd("C:/Users/lofer/Dropbox/POLI/epidemiologia/3. Spatial points/Assignment 3")
+```
+
+# Task 1: Introduction to Spatial Point Process
+
+### The nest data from islet “nucli 23” is stored in nucli23.txt. Additionally, the coordinates of the islet are in poly23.txt.
+
+### 1) Build a ppp object using the “poly23” data as a window
+
+```{r include=FALSE}
+rm(list=ls())
+library(spatstat)
+```
+
+```{r warning=FALSE}
+#the data
+nucli.23=read.delim("T1/nucli23.txt")
+min.X = min(nucli.23$X)
+min.Y = min(nucli.23$Y)
+
+nucli.23$X=nucli.23$X-min.X
+nucli.23$Y=nucli.23$Y-min.Y
+
+max.X = max(nucli.23$X)
+max.Y = max(nucli.23$Y)
+n23=ppp(x = nucli.23$X, y = nucli.23$Y, range(nucli.23$X), range(nucli.23$Y))
+```
+
+```{R}
+#the polygon object for the border
+poligon=poly23 <- read.delim("T1/poly23.txt")
+poligon$X=poligon$X-min.X
+poligon$Y=poligon$Y-min.Y
+pol.illa<-list(x=poligon$X,y=poligon$Y)
+
+min.pX = min(poligon$X)
+min.pY = min(poligon$Y)
+max.pX = max(poligon$X)
+max.pY = max(poligon$Y)
+```
+
+```{R}
+#the final object
+n23p=ppp(nucli.23$X,nucli.23$Y,poly=pol.illa)
+par(mfrow=c(1,1), font = 2, font.axis = 2, font.lab = 4, las = 1, mar = c(1, 0, 1, 0))
+plot(n23p,main="Nests")
+axis(1, at = c(floor(seq(min.pX, max.pX, by=25))), pos=c(min.pX,min.pY-15))
+axis(2, at = c(floor(seq(min.pY, max.pY, by=25))), pos=c(-10,0))
+```
+
+### 2) Describe the point pattern process and its intensity.
+
+```{r}
+summary(n23p)
+```
+
+```{r}
+par(mfrow=c(1,1), font = 2, font.axis = 2, font.lab = 4, las = 1, mar = c(0, 0, 2, 0))
+plot(density(n23p, dimax.Yx=c(256,256), sigma=5.5), main="Intensity of the point process")
+```
+
+### 3) Create a multi-type mark indicating the order of the nesting according to the nesting time.
+
+```{r}
+n23T=ppp(nucli.23$X,nucli.23$Y,poly=pol.illa,marks=nucli.23$data_pos)
+n23T
+```
+
+
+```{r}
+par(mfrow=c(1,1), font = 2, font.axis = 2, font.lab = 4, las = 1, mar = c(2, 0, 2, 0))
+plot(n23T,main="Nests",markscale=0.3,leg.side="right")
+axis(1,at=c(seq(0,max.pX, by=20)),pos=c(-10,0))
+axis(2,at=c(seq(-10,max.pY,by=25)),pos=c(-10,0))
+```
+
+```{r}
+DPOScat=cut(nucli.23$data_pos, breaks=c(9, 16, 19, 22), labels=c("10-16","17-19","20-22"))
+table(DPOScat)
+```
+
+
+The suddivision of the nests in the 3 temporal groups seems homogeneous
+
+```{r}
+n23Tcat=ppp(nucli.23$X,nucli.23$Y,poly=pol.illa,marks=DPOScat)
+summary(n23Tcat)
+```
+
+### 4) Describe the marked point process and its intensity
+
+```{r}
+par(mfrow=c(1,1), font = 2, font.axis = 2, font.lab = 4, las = 1, mar = c(0, 0, 1, 0))
+plot(split(n23Tcat), main="Nests grouped by nesting time")
+```
+
+```{r}
+par(mfrow=c(1,1), font = 2, font.axis = 2, font.lab = 4, las = 1, mar = c(0, 0, 1, 0))
+plot(density(split(n23Tcat),sigma=12), ribbon = FALSE, main="Intensity plots")
+```
+
+### 5) Add to the analysis the height of the islet.
+
+```{r}
+grid <- read.csv("T1/grid_height_23.txt", sep="")
+mat<-as.matrix(read.table("T1/height_23.txt"))
+mat[mat==0]=NA
+height<-im(mat,grid$x,grid$y)
+par(mfrow=c(1,1), font = 2, font.axis = 2, font.lab = 4, las = 1, mar = c(0, 0, 2, 0))
+plot(height,axis=T, main="Comparison between height and nests' position")
+plot(n23p, add=T, cex=0.7, pch=16)
+```
+
+We notice that the nests seem to be concentrated in the locations where the height is higher. So there will be a correlation between these two 
+# .....?  
+
+\newpage

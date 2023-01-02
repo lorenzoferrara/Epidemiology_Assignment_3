@@ -1,0 +1,298 @@
+---
+title: 'TASK 2'
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set( echo=F )
+knitr::opts_chunk$set( cache=T )
+knitr::opts_chunk$set(out.width = '70%')
+knitr::opts_chunk$set(fig.align = "center")
+knitr::opts_chunk$set(tidy =TRUE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+# Task 2: Intensity and Randomness
+### The nest data from islet “nucli 84” is stored in nucli84.txt. Additionally, the coordinates of the islet are in poly84.txt.
+
+### 1) Build a ppp object using the “nucli 84” data.
+
+```{r include=FALSE}
+library(spatstat)
+```
+
+```{r}
+rm(list=ls())
+nucli84 <- read.delim("T2/nucli84.txt")
+
+min.X = min(nucli84$X)
+min.Y = min(nucli84$Y)
+max.X = max(nucli84$X)
+max.Y = max(nucli84$Y)
+
+nucli84$X = nucli84$X - min.X
+nucli84$Y = nucli84$Y - min.Y
+
+n84=ppp(x = nucli84$X, y = nucli84$Y, range(nucli84$X), range(nucli84$Y))
+
+poligon=read.delim("T2/poly84.txt")
+
+poligon$X = poligon$X - min.X
+poligon$Y = poligon$Y - min.Y
+pol.illa<-list(x=poligon$X,y=poligon$Y)
+
+min.pX = min(poligon$X)
+min.pY = min(poligon$Y)
+max.pX = max(poligon$X)
+max.pY = max(poligon$Y)
+
+n84p=ppp(nucli84$X,nucli84$Y,poly=pol.illa, range(poligon$X), range(poligon$Y))
+```
+
+```{r}
+par(mfrow=c(1,1), font = 2, font.axis = 2, font.lab = 4, las = 1, mar = c(2, 0, 1, 0))
+plot(n84p,main="Nests")
+axis(1,at=c(round(seq(min.pX, max.pX,length=10),digits=0)))#, pos=c(0,0))
+axis(2,at=c(round(seq(min.pY, max.pY,length=10),digits=0)), pos=c(min.pX-4,min.pY-50))
+```
+
+### 2) Draw a plot with the intensity of the point process computed by the non-parametric approach. Briefly comment the results.
+
+```{R}
+par(mfrow=c(1,1), font = 2, font.axis = 2, font.lab = 4, las = 1, mar = c(0, 0, 1, 0))
+plot(density(n84p, dimax.Yx=c(256,256), sigma=22), main="Intensity of the point process")
+```
+
+# breve spiegazione
+
+### 3) Assess the Completely Spatial Randomness hypothesis
+
+- via Chi-square test:
+
+We divide the region in 8 subareas with equal areas and under CSR we would expect more or less same number of nests in each subregion.
+
+```{r}
+M <- quadrat.test(n84, nx = 4, ny = 2)
+par(mfrow=c(1,1), font = 2, font.axis = 2, font.lab = 4, las = 1, mar = c(0, 0, 0, 0))
+plot(n84,main="" )
+plot(M, add = TRUE)
+```
+
+Nonetheless we notice that some subregions have more nests than other. Indeed after performing a Chi-square test we get:
+
+```{r}
+M
+```
+
+The p-value is extremely low ($p < 2.2e-16$), so this test leads us to reject the null hypothesis of complete spatial randomness (CRS). 
+
+- via Kolmogorov-Smirnov test:
+```{r}
+KS=cdf.test(n84,covariate="x")
+KS
+plot(KS)
+```
+
+```{r}
+KS=cdf.test(n84,covariate="y")
+KS
+plot(KS)
+```
+
+The observed distribution of Z at data points and the expected one are quite different, so we can reject the null hypothesis of CSR and state that there is a dependency between the intensity of the points and both the Cartesian coordinates.
+
+### 4) Assess the relation between the intensity of the point process and the covariates height and vegetation.
+
+```{r}
+grid <- read.delim("T2/grid.txt")
+grid.veg = read.delim("T2/grid_veg.txt")
+veg = as.matrix(read.delim("T2/veg.txt",header=FALSE))
+height = as.matrix(read.delim("T2/height.txt", header=FALSE))
+# height[height==0]=NA
+# veg[veg==0]=NA
+```
+
+First we visualize the values of Height and Vegetation in the islet:
+
+```{R}
+
+par(mfrow=c(1,2), font = 2, font.axis = 2, font.lab = 4, las = 1, mar = c(0, 0, 1, 2))
+
+Height = im(mat = height, xcol = grid$x, yrow = grid$y)
+plot(Height, main="Height" )
+plot(n84p, add=T, cex=0.5, pch=16)
+
+Vegetation = im(mat = veg, xcol = grid.veg$x, yrow = grid.veg$y)
+plot( Vegetation, main="Vegetation")
+plot(n84p, add=T, cex=0.5, pch=16)
+```
+
+
+The nests seem to be concentrated where the height and the vegetation have an higher value.
+
+Now we categorize the covariates using the suggested intervals:
+
+- Height. [0,10], (10,20], (20,40]
+- Vegetation. [0,20], (20,50], (50,100]
+
+```{r}
+#height
+brks.h <- c(0,10,20,40)
+Hcut <- cut(Height, breaks = brks.h, labels = c("0-10", "10-20", "20-40"))
+H <- tess(image = Hcut)
+
+#vegetation
+brks.v <- c(0, 20, 50, 100)
+Vcut <- cut(Vegetation, breaks = brks.v, labels = c("0-20", "20-50", "50-100"))
+V <- tess(image = Vcut)
+```
+
+```{R}
+par(mfrow=c(1,2), font = 2, font.axis = 2, font.lab = 4, las = 1, mar = c(0, 0, 1, 3.5))
+plot(H, main="Height")
+plot(V, main="Vegetation")
+```
+
+And to assess quantitatively this relation we use:
+
+- a Chi-squared test:
+
+```{r}
+M.h=quadrat.test(n84, tess = H)
+M.h
+
+M.v=quadrat.test(n84p, tess = V)
+M.v
+
+par(mfrow=c(1,2), font = 2, font.axis = 2, font.lab = 4, las = 1, mar = c(0, 0, 1, 3.5))
+plot(M.h, valuesAreColours=FALSE, main="Height", cex=0.6)
+plot(M.v, valuesAreColours=FALSE, main="Vegetation", cex=0.6)
+
+```
+
+The Chi-squared has $pvalue = 1.195\cdot 10^{-7}$.
+
+- a Kolmogorov-Smirnov test: 
+```{r}
+KS <- cdf.test(n84, Height)
+KS
+
+plot(KS,style="QQ")
+```
+
+```{r}
+KS <- cdf.test(n84, Vegetation)
+KS
+
+plot(KS,style="QQ")
+```
+
+The Kolmogorov test has very little p-values and the plots suggest a general difference of the observed quantiles from the theorical ones.
+
+So, in the light of the above considerations, we can state there is in fact a relation between the covariates and the point process.
+
+### 5) Fit an inhomogeneous Poisson model to data
+
+We'll fit the model:
+$$\lambda \sim x + y + \text{Height} + \text{Vegetation}$$
+
+```{r warning=FALSE}
+model = ppm(n84, ~ x + y + Height + Vegetation)
+model
+```
+
+We'll do a step-wise feature selection, removing each time a variable which is not significant.
+
+First we remove the $x$ variable since it's the one with the value of the Z statistic closest to 0.
+
+```{r warning=FALSE}
+model1 = ppm(n84, ~ y + Height + Vegetation)
+model1
+```
+
+Then we can remove the "Vegetation" variable.
+
+```{r warning=FALSE}
+model2 = ppm(n84, ~ y + Height)
+model2
+```
+
+Now all the covariates are significant (they have the Z statistic far enough from zero and their confidence intervals don't contain 0), so we can keep the model:
+$$\lambda \sim y + \text{Height}$$
+and we plot the fitted trend: 
+
+```{r}
+par(mfrow=c(1,1), font = 2, font.axis = 2, font.lab = 4, las = 1, mar = c(0, 0, 1, 2))
+plot(model2,se=F)
+```
+
+Now we assess the goodness of fit of the chosen model:
+
+```{r}
+chosen.model = model2
+M <- quadrat.test(chosen.model, nx = 4, ny = 2)
+M
+```
+
+```{R}
+plot(n84)
+plot(M, add = TRUE, cex = 1.5, col = "red")
+```
+
+Almost half of the subregions have standardized residuals larger than 2.
+
+3.2.2 Kolmogorov-Smirnov test
+Using this test we can check the fitting of the model by each covariate separetaly.
+
+```{r}
+KS1=cdf.test(model2,"y")
+KS1
+```
+
+
+```{r}
+KS3=cdf.test(model2,Height)
+KS3
+```
+
+3.2.3 Smoothed residuals
+```{r}
+diagnose.ppm(model2, which = "smooth",type="pearson",sigma=50)
+```
+
+Model diagnostics (Pearson residuals)
+Diagnostics available:
+    smoothed residual field
+range of smoothed field =  [-0.06541, 0.2529]
+Null standard deviation of smoothed Pearson residual field: 0.005642
+The standard deviation of the smoothed residuals under the null hypothesis of correct fitting is
+
+(2⋅bπ−−√)−1
+
+In this case we have used a bandwidth of b=50, so residuals larger than
+
+$3\cdot (2\cdot 50 \cdot \sqrt\pi)^{-1} =0.01693$
+
+can be considered as extreme and they can be useful to identify subregions that are not well fitted.
+
+3.2.4 Exponential energy marks
+If the model fits well the data, the addition of the exponential energy marks should be equal to the area of the window.
+
+```{r}
+sum(eem(model2))/area(n84)
+```
+The value is extremely lower than 1, indicating the fit is not good.
+
+3.2.5 Lurking plot
+
+```{r}
+lurking(model2, Height, type = "raw")
+```
+
+The residuals lie outside the envelope. The fit is not good:
+
+- When the height is lower than 10 the residuals are consistently negative. Therefore, there are less points than expected with low height.
+- From $height=10$ to $height=25$ the residuals are growing, so there are more points than expected.
+

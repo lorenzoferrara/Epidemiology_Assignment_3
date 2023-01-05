@@ -12,7 +12,7 @@ output:
 # knitr::opts_chunk$set( echo=F )
 knitr::opts_chunk$set( cache = T )
 knitr::opts_chunk$set( warning=FALSE )
-knitr::opts_chunk$set( out.width = '70%' )
+knitr::opts_chunk$set( out.width = '60%' )
 knitr::opts_chunk$set( fig.align = "center" )
 knitr::opts_chunk$set( tidy =TRUE )
 knitr::opts_chunk$set( message = FALSE )
@@ -132,5 +132,3 @@ plot(n23p, add=T, cex=0.7, pch=16)
 ```
 
 This plot allows us to observe a correlation between the positions of the nest and the elevation of the islet. It appears that the nests are concentrated in areas with higher elevation. Therefore, we can conclude that the point process is not completely random and the assumption of a Homogeneous Poisson Process can be rejected.
-
-\newpage

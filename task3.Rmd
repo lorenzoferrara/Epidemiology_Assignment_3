@@ -1,15 +1,19 @@
 ---
-title: "TASK 3: Interaction"
+title: 'TASK 3: Interaction'
 author: "Ferrara Lorenzo"
+output: pdf_document
 ---
 
 ```{r include=FALSE}
 # knitr::opts_chunk$set( echo=F )
+knitr::opts_chunk$set( cache=T )
 knitr::opts_chunk$set(out.width = '70%')
 knitr::opts_chunk$set(fig.align = "center")
 knitr::opts_chunk$set(tidy =TRUE)
 knitr::opts_chunk$set(message = FALSE)
 ```
+
+# Task 3: Interaction
 
 ### The nest data from islet “nucli 84” is stored in nucli84.txt. Additionally, the coordinates of the islet are in poly84.txt
 
@@ -59,7 +63,7 @@ axis(2,at=c(round(seq(min.pY, max.pY,length=10),digits=0)),pos=c(min.pX-4,min.pY
 
 ### 2) Check the interaction pattern.
 
-To check the interaction pattern we look at the L-function $L(r) = \sqrt{\frac{K(r)}{\pi}}$ since it's an estimator whose variance does not depend on r, so it's more stable than other estimators (like F, G and K).
+To check the interaction pattern, we utilize the L-function defined as $L(r) = \sqrt{\frac{K(r)}{\pi}}$ as it is an estimator with a variance that does not vary with respect to $r$. This makes it more stable than other estimators, such as F, G, and K.
 
 ```{r}
 E <- envelope(n84p, Lest, nsim = 19, rank = 1, global = TRUE,correction="best")
@@ -70,8 +74,7 @@ plot(E, main = "Global envelopes of L(r)", legend=F)
 abline(v=1, lty=3)
 ```
 
-The observed $L^(r)$ goes above the theoretical function: that means that the observed empty-space between locations is more than the one expected under the hypothesis of HPP. So we're in presence of a regular pattern.
-We also notice that the observed line lies outside of the envelopes from $r=1$ on.
+The observed $L^(r)$ goes above the theoretical function, indicating that the observed distance between locations is greater than expected under the assumption of a homogeneous Poisson process. This suggests the presence of a regular pattern. Additionally, we notice that the observed line falls outside of the envelopes from $r=1$ onward.
 
 ### 3) Model the relation between the intensity of the point process and the covariates height and vegetation accounting for the interaction pattern. Interpret the estimates.
 
@@ -80,7 +83,6 @@ Since we have a regular pattern, we will use Gibbs models.
 First we try to fit a Hardcore model:
 
 ```{r}
-#DA CANCELLARE
 grid <- read.delim("T2/grid.txt")
 grid.veg = read.delim("T2/grid_veg.txt")
 veg = as.matrix(read.delim("T2/veg.txt",header=FALSE))
@@ -103,15 +105,15 @@ E <- envelope(fitH, Lest, nsim = 19, rank = 1, global = TRUE, correction="best")
 ```
 
 ```{r}
-plot(E, main = "global envelopes of L(r)")
+plot(E, main = "global envelopes of L(r)", legend=F)
 ```
 
-The observed function lies outside the envelopes. Therefore, the Hardcore model does not fit well the data.
+The observed function falls outside of the envelopes, indicating that the Hardcore model does not fit the data well. 
 
-So we try using a Strauss model: in the exploratory analysis the observed L-function lies outside the envelope from $r=1$ on, so we to decide which is the best choice for $r$, we'll analyze the profile likelihood with several values from this range.
+As an alternative, we will try using a Strauss model. Our exploratory analysis showed that the observed L-function lies outside the envelope for values of $r$ greater than 1. To determine the optimal value for $r$, we will analyze the profile likelihood using a range of values inside the interval $[1,15]$ and choose the one that provides the best fit to the data.
 
 ```{r}
-df=data.frame(r=seq(2,15,by=1))
+df=data.frame(r=seq(1,15,by=0.5))
 pfit=profilepl(df,Strauss,n84p,~Height + Vegetation)
 ```
 
@@ -119,14 +121,13 @@ pfit=profilepl(df,Strauss,n84p,~Height + Vegetation)
 plot(pfit, main="Profiling of the Strauss model through logLikelihood")
 ```
 
-The maximum value is reached at $r=$
-
 ```{r}
 r.opt = pfit$fit$fitin$interaction$par$r
-r.opt
 ```
 
-So now we can finally etimate the model:
+The optimal value is reached at $r=$ `r r.opt`.
+
+So now we can finally estimate the model:
 
 ```{r}
 fitSt<-ppm(n84p, ~Height + Vegetation, Strauss(r=r.opt))
@@ -140,20 +141,20 @@ E <- envelope(fitSt, Lest, nsim = 19, rank = 1, global = TRUE,correction="best")
 plot(E, main = "global envelopes of L(r)")
 ```
 
-The observed L-function is inside the envelopes, therefore the Strauss model is valid and we can proceed to interpret it.
+The observed L-function is inside the envelopes, therefore the Strauss model can be valid and we proceed to interpret it.
 
 ```{r}
-summary(fitSt)
+summary(fitSt, fine = F)
 ```
 
-The estimates of its coefficients are 
-
-<!-- ATTENTO CHE SONO IN EXP -->
+The estimates of its coefficients are:
 
 ```{r}
-exp(fitSt$coef)
+fitSt$coef
 ```
 
-```{r}
-exp(confint(fitSt))
-```
+The estimate for the interaction parameter is	$\gamma =$ `r fitSt$coef[4]`. 
+The parameter $\gamma$ controls the strength of interaction between points. If $\gamma = 1$ the model
+reduces to a Poisson process. If $\gamma = 0$ the model is a hard core process. For values $0 < \gamma < 1$, like in our case, the process exhibits a moderate strength of interaction between the presence of points in different locations.
+
+

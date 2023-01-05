@@ -1,12 +1,15 @@
 ---
 title: "R Notebook"
-output: html_notebook
+output:
+  pdf_document: default
+  html_notebook: default
 ---
 
 # TASK 4: Case-control studies
 
 ```{r include=FALSE}
 # knitr::opts_chunk$set( echo=F )
+knitr::opts_chunk$set( cache=T )
 knitr::opts_chunk$set(out.width = '70%')
 knitr::opts_chunk$set(fig.align = "center")
 knitr::opts_chunk$set(tidy =TRUE)
@@ -23,16 +26,12 @@ rm(list=ls())
 
 pbc.data <- read.delim("T4/PBCdata2.txt")
 head(pbc.data)
-
 ```
 
 
 ### 1) Create the ppp object.
 
 ```{r}
-
-# pbc=ppp(x = pbc.data$x, y = pbc.data$y, range(pbc.data$x), range(pbc.data$y))
-
 poligon=read.delim("T4/PBCpoly.txt")
 min.pX = min(poligon$x)
 max.pX = max(poligon$x)
@@ -50,6 +49,7 @@ pbc.p = ppp(pbc.data$x,pbc.data$y, poly=pol.illa, range(poligon$x), range(poligo
 cases = split(pbc.p, pbc.data$marks)$case
 controls = split(pbc.p, pbc.data$marks)$control
 
+par(mfrow=c(1,1), font = 2, font.axis = 2, font.lab = 4, las = 1, mar = c(0, 0, 2.5, 0))
 plot(pbc.p$window, main = "Primary Biliary Cirrhosis data")
 points(controls, pch = 3, col = "green")
 points(cases, pch = 16, col = "red")
@@ -58,16 +58,15 @@ legend("right", c("control", "case"), pch = c(3, 16), col=c("green", "red"), bty
 
 ### 2) Assess the spatial variation of the risk
 
-
-```{r}
+```{r include=FALSE}
 library(sparr)
-# chp <- risk(cases,controls, adapt = T) #he's using the log of the ... density
-load("chp.RData")
 ```
 
 We plot the relative risk in logarithmic scale, so the locations colored in red have a Relative risk greater than 1, while locations colored in blue have a Relative risk smaller than 1.
 
 ```{r}
+chp <- risk(cases,controls, adapt = T)
+
 M = max(chp$rr)
 m = min(chp$rr)
 
@@ -83,7 +82,7 @@ where $c$ is the cell of the grid and (under the null hypothesis $\text{H}_0$) $
 
 ```{r}
 cellsize<-chp$rr$xstep*chp$rr$xstep
-rho0<-0 # For Log-densities
+rho0<-0
 ```
 
 The value of the statistic is:
@@ -110,14 +109,10 @@ perm_rr<-function(){
 }
 ```
 
-```{r include=FALSE}
-nsim<-199
-set.seed(2021)
+```{r include=F, echo=T}
+nsim<-99
+set.seed(2022)
 rperm<-sapply(1:nsim,function(i) perm_rr())
-```
-
-```{r}
-rperm
 ```
 
 And its p-value (obtained through a permutation approach) is:
@@ -133,15 +128,18 @@ So we don't have enough evidence to reject the null hypothesis.
 We draw the K-functions for cases and controls:
 
 ```{r}
-s=seq(0,1400,by=100)
+s=seq(0,500,length=20)
 khcases<-Kest(cases, r=s, correction="best")
 khcontrols<-Kest(controls, r=s, correction="best")
 ```
 
 ```{r}
-plot(khcases, legend=T)
-lines(khcontrols$r,khcontrols$iso,lty=2, col="blue")
+plot(khcases, legend=F)
+lines(khcontrols$r,khcontrols$iso,lty=1, col="blue")
+legend("topleft", legend = c("cases", "controls", "Poisson"), lty=c(1,1,3), col = c("black", "blue", "red"), lwd=3)
 ```
+
+The K-functions for both cases and controls are above the Poisson curve, indicating a cluster interaction. To test the null hypothesis that the two K-functions are equal, we will use a permutational approach.
 
 ```{r}
 Kdif<-function(X, r, cr="iso")
@@ -158,31 +156,21 @@ envKdif<-envelope(pbc.p, Kdif, r=s ,nsim=nsim, savefuns=TRUE,simulate=expression
 ```
 
 ```{r}
-plot(envKdif,legend=F)
+plot(envKdif,legend=F, main="Envelope of the difference")
 ```
+
+As shown in the plot, the difference between the K-functions falls outside the envelopes for all ranges, indicating that the difference is not significant. The p-value for this test is as follows:
 
 ```{r}
 simfuns<-as.data.frame(attr(envKdif, "simfuns"))[,-1]
-```
-
-```{r}
 khcovdiag<-apply(simfuns, 1, var)
-```
-
-```{r}
 T0<-sum( ((khcases$iso-khcontrols$iso)/sqrt(khcovdiag))[-1])
-```
-
-```{r}
 T_pm<-apply(simfuns, 2, function(X){
   sum((X/sqrt(khcovdiag))[-1])
 })
-```
-
-```{r}
 pvalue<-2*(sum(abs(T_pm)>abs(T0))+1)/(nsim+1)
 pvalue
 ```
 
-so we cannot say that the interaction pattern is different between cases and control
+Therefore, we can reject the null hypothesis at a significance level of $95%$ and conclude that the interaction pattern differs between cases and controls.
 

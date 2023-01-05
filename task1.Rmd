@@ -9,15 +9,13 @@ output:
 ---
 
 ```{r include=FALSE}
-knitr::opts_chunk$set( echo=F )
-knitr::opts_chunk$set(out.width = '70%')
-knitr::opts_chunk$set(fig.align = "center")
-knitr::opts_chunk$set(tidy =TRUE)
-knitr::opts_chunk$set(message = FALSE)
-```
-
-```{r}
-setwd("C:/Users/lofer/Dropbox/POLI/epidemiologia/3. Spatial points/Assignment 3")
+# knitr::opts_chunk$set( echo=F )
+knitr::opts_chunk$set( cache = T )
+knitr::opts_chunk$set( warning=FALSE )
+knitr::opts_chunk$set( out.width = '70%' )
+knitr::opts_chunk$set( fig.align = "center" )
+knitr::opts_chunk$set( tidy =TRUE )
+knitr::opts_chunk$set( message = FALSE )
 ```
 
 # Task 1: Introduction to Spatial Point Process
@@ -42,7 +40,6 @@ nucli.23$Y=nucli.23$Y-min.Y
 
 max.X = max(nucli.23$X)
 max.Y = max(nucli.23$Y)
-n23=ppp(x = nucli.23$X, y = nucli.23$Y, range(nucli.23$X), range(nucli.23$Y))
 ```
 
 ```{R}
@@ -72,17 +69,19 @@ axis(2, at = c(floor(seq(min.pY, max.pY, by=25))), pos=c(-10,0))
 ```{r}
 summary(n23p)
 ```
-
 ```{r}
 par(mfrow=c(1,1), font = 2, font.axis = 2, font.lab = 4, las = 1, mar = c(0, 0, 2, 0))
 plot(density(n23p, dimax.Yx=c(256,256), sigma=5.5), main="Intensity of the point process")
 ```
 
-### 3) Create a multi-type mark indicating the order of the nesting according to the nesting time.
+The density plot reveals that the majority of the nests are located in the center and south, along the north coast. There is a notable concentration, indicated by the yellow peak, in which a large number of nests were found. 
+
+This distribution does not appear to be completely random and appears to have a pattern.
+
+### 3) Create a multi-type mark indicating the order of the nesting according to the nesting time, Using the time intervals: [10,16], [17,19], [20,22].
 
 ```{r}
 n23T=ppp(nucli.23$X,nucli.23$Y,poly=pol.illa,marks=nucli.23$data_pos)
-n23T
 ```
 
 
@@ -118,6 +117,8 @@ par(mfrow=c(1,1), font = 2, font.axis = 2, font.lab = 4, las = 1, mar = c(0, 0, 
 plot(density(split(n23Tcat),sigma=12), ribbon = FALSE, main="Intensity plots")
 ```
 
+Different patterns can be observed in the three time intervals, with a distribution initially located in the extreme south that gradually moves towards the center.
+
 ### 5) Add to the analysis the height of the islet.
 
 ```{r}
@@ -130,7 +131,6 @@ plot(height,axis=T, main="Comparison between height and nests' position")
 plot(n23p, add=T, cex=0.7, pch=16)
 ```
 
-We notice that the nests seem to be concentrated in the locations where the height is higher. So there will be a correlation between these two 
-# .....?  
+This plot allows us to observe a correlation between the positions of the nest and the elevation of the islet. It appears that the nests are concentrated in areas with higher elevation. Therefore, we can conclude that the point process is not completely random and the assumption of a Homogeneous Poisson Process can be rejected.
 
 \newpage

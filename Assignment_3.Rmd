@@ -31,7 +31,7 @@ library(spatstat)
 
 ```{r warning=FALSE}
 #the data
-nucli.23=read.delim("T1/nucli23.txt")
+nucli.23=read.delim("data/T1/nucli23.txt")
 min.X = min(nucli.23$X)
 min.Y = min(nucli.23$Y)
 
@@ -44,7 +44,7 @@ max.Y = max(nucli.23$Y)
 
 ```{R}
 #the polygon object for the border
-poligon=poly23 <- read.delim("T1/poly23.txt")
+poligon=poly23 <- read.delim("data/T1/poly23.txt")
 poligon$X=poligon$X-min.X
 poligon$Y=poligon$Y-min.Y
 pol.illa<-list(x=poligon$X,y=poligon$Y)
@@ -114,16 +114,16 @@ plot(split(n23Tcat), main="Nests grouped by nesting time")
 
 ```{r}
 par(mfrow=c(1,1), font = 2, font.axis = 2, font.lab = 4, las = 1, mar = c(0, 0, 1, 0))
-plot(density(split(n23Tcat),sigma=12), ribbon = FALSE, main="Intensity plots")
+plot(density(split(n23Tcat),sigma=10), ribbon = FALSE, main="Intensity plots")
 ```
 
-Different patterns can be observed in the three time intervals, with a distribution initially located in the extreme south that gradually moves towards the center.
+Different patterns can be observed in the three time intervals: there is an initial distribution in the north and south of the islet, which gradually fades towards the center.
 
 ### 5) Add to the analysis the height of the islet.
 
 ```{r}
-grid <- read.csv("T1/grid_height_23.txt", sep="")
-mat<-as.matrix(read.table("T1/height_23.txt"))
+grid <- read.csv("data/T1/grid_height_23.txt", sep="")
+mat<-as.matrix(read.table("data/T1/height_23.txt"))
 mat[mat==0]=NA
 height<-im(mat,grid$x,grid$y)
 par(mfrow=c(1,1), font = 2, font.axis = 2, font.lab = 4, las = 1, mar = c(0, 0, 2, 0))
@@ -148,7 +148,7 @@ library(spatstat)
 
 ```{r}
 rm(list=ls())
-nucli84 <- read.delim("T2/nucli84.txt")
+nucli84 <- read.delim("data/T2/nucli84.txt")
 
 min.X = min(nucli84$X)
 min.Y = min(nucli84$Y)
@@ -160,7 +160,7 @@ nucli84$Y = nucli84$Y - min.Y
 
 n84=ppp(x = nucli84$X, y = nucli84$Y, range(nucli84$X), range(nucli84$Y))
 
-poligon=read.delim("T2/poly84.txt")
+poligon=read.delim("data/T2/poly84.txt")
 
 poligon$X = poligon$X - min.X
 poligon$Y = poligon$Y - min.Y
@@ -201,7 +201,7 @@ modelPois = ppm(n84, ~ 1)
 modelPois
 ```
 
-So the intensity has point estimate ` r exp(modelPois$coef)` and 95% confidence interval 
+So the intensity has point estimate `r exp(modelPois$coef)` and 95% confidence interval 
 
 ```{r echo=T, include=F}
 exp(confint(modelPois))
@@ -253,10 +253,10 @@ The observed distribution of Z at data points differs significantly from the exp
 ### 4) Assess the relation between the intensity of the point process and the covariates height and vegetation.
 
 ```{r}
-grid <- read.delim("T2/grid.txt")
-grid.veg = read.delim("T2/grid_veg.txt")
-veg = as.matrix(read.delim("T2/veg.txt",header=FALSE))
-height = as.matrix(read.delim("T2/height.txt", header=FALSE))
+grid <- read.delim("data/T2/grid.txt")
+grid.veg = read.delim("data/T2/grid_veg.txt")
+veg = as.matrix(read.delim("data/T2/veg.txt",header=FALSE))
+height = as.matrix(read.delim("data/T2/height.txt", header=FALSE))
 ```
 
 First we visualize the values of Height and Vegetation in the islet:
@@ -460,7 +460,7 @@ library(spatstat)
 
 ```{r}
 rm(list=ls())
-nucli84 <- read.delim("T3/nucli84.txt")
+nucli84 <- read.delim("data/T3/nucli84.txt")
 
 min.X = min(nucli84$X)
 min.Y = min(nucli84$Y)
@@ -472,7 +472,7 @@ nucli84$Y = nucli84$Y - min.Y
 
 n84=ppp(x = nucli84$X, y = nucli84$Y, range(nucli84$X), range(nucli84$Y))
 
-poligon=read.delim("T3/poly84.txt")
+poligon=read.delim("data/T3/poly84.txt")
 
 poligon$X = poligon$X - min.X
 poligon$Y = poligon$Y - min.Y
@@ -518,10 +518,10 @@ Since we have a regular pattern, we will use Gibbs models.
 First we try to fit a Hardcore model:
 
 ```{r}
-grid <- read.delim("T2/grid.txt")
-grid.veg = read.delim("T2/grid_veg.txt")
-veg = as.matrix(read.delim("T2/veg.txt",header=FALSE))
-height = as.matrix(read.delim("T2/height.txt", header=FALSE))
+grid <- read.delim("data/T2/grid.txt")
+grid.veg = read.delim("data/T2/grid_veg.txt")
+veg = as.matrix(read.delim("data/T2/veg.txt",header=FALSE))
+height = as.matrix(read.delim("data/T2/height.txt", header=FALSE))
 
 Height = im(mat = height, xcol = grid$x, yrow = grid$y)
 Vegetation = im(mat = veg, xcol = grid.veg$x, yrow = grid.veg$y)
@@ -614,7 +614,7 @@ The data are:
 library(spatstat)
 rm(list=ls())
 
-pbc.data <- read.delim("T4/PBCdata2.txt")
+pbc.data <- read.delim("data/T4/PBCdata2.txt")
 head(pbc.data)
 ```
 
@@ -622,7 +622,7 @@ head(pbc.data)
 ### 1) Create the ppp object.
 
 ```{r}
-poligon=read.delim("T4/PBCpoly.txt")
+poligon=read.delim("data/T4/PBCpoly.txt")
 min.pX = min(poligon$x)
 max.pX = max(poligon$x)
 min.pY = min(poligon$y)
@@ -687,11 +687,9 @@ ratiorho
 perm_rr<-function(){
   new_ch<-rlabel(pbc.p)
   
-  num = length(pbc.p$x)
-  indices = sample(1:num)
-  
-  new_cases <- split(new_ch,  f = pbc.p$marks[indices])$case
-  new_controls <- split(new_ch, f = pbc.p$marks[indices])$control
+  new_cases <- split(new_ch,  f = new_ch$marks)$case
+  new_controls <- split(new_ch, f = new_ch$marks)$control
+
   new_chp <- risk(new_cases,new_controls)
   cellsize<-new_chp$rr$xstep*new_chp$rr$ystep
   ratio_perm <- cellsize*sum((new_chp$rr$v-rho0)^2,na.rm=T)

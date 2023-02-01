@@ -11,4 +11,4 @@
 </p>
 
 <h3 align="left">Description:</h3>
-<p align="left">This repository provides a comprehensive guide to performing spatial point process analysis on islet and PBC data. The tasks include analyzing the point pattern process and intensity, creating marked point processes, fitting inhomogeneous Poisson models, checking for interaction patterns, and conducting case-control studies. The data, including the nest locations and covariates, are provided in separate text files. The code utilizes R programming language to accomplish the tasks and produce visualizations. This repository serves as a valuable resource for students, researchers, and practitioners in the fields of bioestadística and spatial statistics.</p>
+<p align="left">This repository provides a comprehensive guide to performing spatial point process analysis on islet and PBC data. The tasks include analyzing the point pattern process and intensity, creating marked point processes, fitting inhomogeneous Poisson models, checking for interaction patterns, and conducting case-control studies. The data, including the nest locations and covariates, are provided in separate text files.</p>
